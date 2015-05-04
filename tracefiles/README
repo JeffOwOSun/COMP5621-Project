@@ -1,0 +1,19 @@
+The network trace data are organized in a few directories, where 'known' stores traces of known types, i.e., general internet (gi) or datacenter (dc). Files starting with 'gi' are general Internet traces, and files starting with 'dc' are datacenter traces. The 'unknown' directory contains traces of unknown types.
+
+The trace data are in the following format:
+
+Start           SrcIPaddress    SrcP    DstIPaddress    DstP    Octets
+  |                  |           |          |            |         |
+  |                  |           |          |            |      Number of octets
+  |                  |           |          |            |      
+  |                  |           |          |           Destination port       
+  |                  |           |          |          
+  |                  |           |      Destination IP
+  |                  |           | 
+  |                  |          Source port
+  |                  |
+  |                  Source IP
+  |                  
+Start time of the packet
+
+
