@@ -60,3 +60,4 @@ target/
 output
 *.trace
 *.xlsx
+*.swp
