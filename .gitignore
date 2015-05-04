@@ -58,6 +58,7 @@ target/
 
 # our project
 output
+*.output
 *.trace
 *.xlsx
 *.swp
