@@ -19,15 +19,15 @@ def main():
 	logs = {}
 	
 	for index, trace_file in enumerate(trace_files): #index is only for logging the progress
-		print("process file %d/%d ...\n", (index, len(trace_files)))
+		print("process file %d/%d ...\n" % (index, len(trace_files)))
 		#the dictionary to store the result
 		log_result = {}
 		#open the file
 		with open(os.path.join(known_trace_file_dir, trace_file),'rU') as f: # U for universal newline
 			#calculate the distribution
 			src_ip_last_octet, dest_ip_last_octet = calc_last_octet_distrib(f)
-			#log_result['src_ip_last_octet'] = src_ip_last_octet
-			#log_result['dest_ip_last_octet'] = dest_ip_last_octet
+			log_result['src_ip_last_octet'] = src_ip_last_octet
+			log_result['dest_ip_last_octet'] = dest_ip_last_octet
 			#calculate the standard deviation
 			my_stdev = diff_stdev(src_ip_last_octet, dest_ip_last_octet)
 			log_result['stdev'] = my_stdev
@@ -39,10 +39,10 @@ def main():
 				dc_stdevs.append(my_stdev)
 				log_result['file_type'] = 'datacenter'
 				
-		logs.[trace_file] = log_result
+		logs[trace_file] = log_result
 		
 	###for debug use only###
-	pprint.pprint(logs)
+	###pprint.pprint(logs)
 	
 	#the averaged standard deviations
 	gi_stdev = avg(gi_stdevs)
@@ -50,7 +50,11 @@ def main():
 	
 	#try to figure out the unknown files
 
-	
+	#save the logs
+	import json
+	log_string = json.dumps(logs)
+	with open('output.json','w') as f:
+		f.write(log_string)
 
 ##########################################
 # function: calculate the distribution of the last octet of inbound and outbound traffic
