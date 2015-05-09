@@ -62,3 +62,4 @@ output
 *.trace
 *.xlsx
 *.swp
+*.json
