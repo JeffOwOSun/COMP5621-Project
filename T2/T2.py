@@ -3,6 +3,8 @@ import os
 import pprint
 
 def main():
+	# 
+	
 	# the default path of trace file
 	known_trace_file_dir = '../tracefiles/known'
 	unknown_trace_file_dir = '../tracefiles/unknown'
@@ -12,17 +14,19 @@ def main():
 	unknown_trace_files = [os.path.join(unknown_trace_file_dir, x) for x in os.listdir(unknown_trace_file_dir) if x.endswith(".trace")]
 	trace_files = known_trace_files + unknown_trace_files
 	
-	# process each known file
+	# process each file
 	# list of standard deviations
 	gi_stdevs = []
 	dc_stdevs = []
 	# the list for the log
 	logs = {}
+	outputs = {}
 	
 	for index, trace_file in enumerate(trace_files): #index is only for logging the progress
 		print("process file %d/%d: %s ...\n" % (index + 1, len(trace_files), trace_file.split('/')[-1]))
 		#the dictionary to store the result
 		log_result = {}
+		output_result = {}
 		#open the file
 		with open(trace_file,'rU') as f: # U for universal newline
 			#calculate the distribution
@@ -46,21 +50,26 @@ def main():
 			log_result['dest_ip_last_octet'] = dest_ip_last_octet
 			log_result['stdev'] = my_stdev
 			log_result['file_type'] = file_type
+			output_result['stdev'] = my_stdev
 				
 		logs[trace_file] = log_result
+		outputs[trace_file.split('/')[-1]] = output_result
 		
 	###for debug use only###
 	###pprint.pprint(logs)
 	
 	#the averaged standard deviations
-	gi_stdev = avg(gi_stdevs)
-	dc_stdev = avg(dc_stdevs)
+	#gi_stdev = avg(gi_stdevs)
+	#dc_stdev = avg(dc_stdevs)
 	
 	#save the logs
 	import json
-	log_string = json.dumps(logs)
-	with open('output.json','w') as f:
+	log_string = json.dumps(logs, sort_keys=True)
+	with open('log.json','w') as f:
 		f.write(log_string)
+	output_string = json.dumps(outputs, sort_keys=True)
+	with open('output.json','w') as f:
+		f.write(output_string)
 
 ##########################################
 # function: calculate the distribution of the last octet of inbound and outbound traffic
@@ -92,9 +101,10 @@ def diff_stdev(arr_1, arr_2):
 	#calculate the signed difference
 	dif = [a-b for a,b in zip(arr_1, arr_2)]
 	#calculate the average
-	avg = [(a+b)/2 for a,b in zip(arr_1, arr_2)]
+	avg = [(float(a+b)/2) for a,b in zip(arr_1, arr_2)]
 	#calculate the signed percentage difference
-	dif = [a/b for a,b in zip(dif,avg)]
+	dif = [a/float(b) for a,b in zip(dif,avg)]
+	
 	#calculate the standard deviation of signed percentage difference
 	return stdev(dif)
 
