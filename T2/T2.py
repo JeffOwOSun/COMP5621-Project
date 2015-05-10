@@ -1,10 +1,16 @@
 import csv
 import os
 import pprint
+import json
 
 def main():
-	# 
-	
+	# try opening the log from last time
+	try:
+		with open('log.json', 'rU') as f:
+			old_logs = json.load(f)
+	except IOError as e:
+		print(e)
+		old_logs = None
 	# the default path of trace file
 	known_trace_file_dir = '../tracefiles/known'
 	unknown_trace_file_dir = '../tracefiles/unknown'
@@ -30,37 +36,43 @@ def main():
 		#the dictionary to store the result
 		log_result = {}
 		output_result = {}
-		#open the file
-		with open(trace_file,'rU') as f: # U for universal newline
-			#calculate the distribution
-			src_ip_last_octet, dest_ip_last_octet = calc_last_octet_distrib(f)
-			
-			#calculate the standard deviation
-			my_stdev = diff_stdev(src_ip_last_octet, dest_ip_last_octet)
-			
-			#determine the file type
-			file_type = ''
-			if (trace_file.split('/')[-1][0] == 'g'): #general internet traffic
-				gi_stdevs.append(my_stdev)
-				gi_stdev = avg(gi_stdevs)
-				file_type = 'general internet'
-			elif (trace_file.split('/')[-1][0] == 'd'):
-				dc_stdevs.append(my_stdev)
-				dc_stdev = avg(dc_stdevs)
+		
+		try:
+			#try reading distribution from old_value
+			src_ip_last_octet = old_logs[trace_file]['src_ip_last_octet']
+			dest_ip_last_octet = old_logs[trace_file]['dest_ip_last_octet']
+		except:	
+			#open the file
+			with open(trace_file,'rU') as f: # U for universal newline
+				#calculate the distribution
+				src_ip_last_octet, dest_ip_last_octet = calc_last_octet_distrib(f)
+		
+		#calculate the standard deviation
+		my_stdev = diff_stdev(src_ip_last_octet, dest_ip_last_octet)
+		
+		#determine the file type
+		file_type = ''
+		if (trace_file.split('/')[-1][0] == 'g'): #general internet traffic
+			gi_stdevs.append(my_stdev)
+			gi_stdev = avg(gi_stdevs)
+			file_type = 'general internet'
+		elif (trace_file.split('/')[-1][0] == 'd'):
+			dc_stdevs.append(my_stdev)
+			dc_stdev = avg(dc_stdevs)
+			file_type = 'datacenter'
+		else:
+			# do the classification
+			if (abs(my_stdev - gi_stdev) > abs(my_stdev - dc_stdev)) :
 				file_type = 'datacenter'
 			else:
-				# do the classification
-				if (abs(my_stdev - gi_stdev) > abs(my_stdev - dc_stdev)) :
-					file_type = 'datacenter'
-				else:
-					file_type = 'general internet'
-			
-			log_result['src_ip_last_octet'] = src_ip_last_octet
-			log_result['dest_ip_last_octet'] = dest_ip_last_octet
-			log_result['stdev'] = my_stdev
-			log_result['file_type'] = file_type
-			output_result['stdev'] = my_stdev
-			output_result['file_type'] = file_type
+				file_type = 'general internet'
+		
+		log_result['src_ip_last_octet'] = src_ip_last_octet
+		log_result['dest_ip_last_octet'] = dest_ip_last_octet
+		log_result['stdev'] = my_stdev
+		log_result['file_type'] = file_type
+		output_result['stdev'] = my_stdev
+		output_result['file_type'] = file_type
 				
 		logs[trace_file] = log_result
 		outputs[trace_file.split('/')[-1]] = output_result
@@ -69,7 +81,6 @@ def main():
 	###pprint.pprint(logs)
 	
 	#save the logs
-	import json
 	log_string = json.dumps(logs, sort_keys=True) #everything
 	with open('log.json','w') as f:
 		f.write(log_string)
@@ -82,24 +93,21 @@ def main():
 	#make a csv output of raw distribution data using logs
 	with open('distribution.output','w') as f:
 		for index, key in enumerate(logs):
-			f.write(key)
-			if (index < len(logs)):
+			f.write('{file_name} src\t{file_name} dest'.format(idx=index,file_name = key.split('/')[-1]))
+			if (index + 1 < len(logs)):
 				f.write('\t')
 			else:
 				f.write('\n')
 		break_flag = False
-		line_number = 0
-		while (not break_flag):
-			break_flag = True #default value
+		for line_number in range(256):
 			for index, key in enumerate(logs):
-				if (line_number < len(logs[key])): #if there's still a list as long as line_number
-					f.write(logs[key][line_number])
-					break_flag = False #prevent break
-				if (index < len(logs)):
+				f.write(str(logs[key]['src_ip_last_octet'][line_number]))
+				f.write('\t')
+				f.write(str(logs[key]['dest_ip_last_octet'][line_number]))
+				if (index + 1 < len(logs)):
 					f.write('\t')
 				else:
 					f.write('\n')
-			line_number += 1
 		
 
 ##########################################
