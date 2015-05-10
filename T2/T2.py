@@ -18,6 +18,9 @@ def main():
 	# list of standard deviations
 	gi_stdevs = []
 	dc_stdevs = []
+	gi_stdev = 0
+	dc_stdev = 0
+	
 	# the list for the log
 	logs = {}
 	outputs = {}
@@ -37,20 +40,27 @@ def main():
 			
 			#determine the file type
 			file_type = ''
-			if (trace_file[0] == 'g'): #general internet traffic
+			if (trace_file.split('/')[-1][0] == 'g'): #general internet traffic
 				gi_stdevs.append(my_stdev)
+				gi_stdev = avg(gi_stdevs)
 				file_type = 'general internet'
-			elif (trace_file[0] == 'd'):
+			elif (trace_file.split('/')[-1][0] == 'd'):
 				dc_stdevs.append(my_stdev)
+				dc_stdev = avg(dc_stdevs)
 				file_type = 'datacenter'
 			else:
-				file_type = 'unknown'
+				# do the classification
+				if (abs(my_stdev - gi_stdev) > abs(my_stdev - dc_stdev)) :
+					file_type = 'datacenter'
+				else:
+					file_type = 'general internet'
 			
 			log_result['src_ip_last_octet'] = src_ip_last_octet
 			log_result['dest_ip_last_octet'] = dest_ip_last_octet
 			log_result['stdev'] = my_stdev
 			log_result['file_type'] = file_type
 			output_result['stdev'] = my_stdev
+			output_result['file_type'] = file_type
 				
 		logs[trace_file] = log_result
 		outputs[trace_file.split('/')[-1]] = output_result
@@ -58,18 +68,22 @@ def main():
 	###for debug use only###
 	###pprint.pprint(logs)
 	
-	#the averaged standard deviations
-	#gi_stdev = avg(gi_stdevs)
-	#dc_stdev = avg(dc_stdevs)
-	
 	#save the logs
 	import json
-	log_string = json.dumps(logs, sort_keys=True)
+	log_string = json.dumps(logs, sort_keys=True) #everything
 	with open('log.json','w') as f:
 		f.write(log_string)
-	output_string = json.dumps(outputs, sort_keys=True)
+	output_string = json.dumps(outputs, sort_keys=True) #json that contains only name, stdev and classification
 	with open('output.json','w') as f:
 		f.write(output_string)
+	###debug use only###
+	pprint.pprint(outputs)
+	###\debug use only###
+	with open('stdev.output','w') as f: #csv for stdev
+		for key,value in outputs:
+			f.write('%s\t%s\n' % (key, str(value['stdev'])))
+	#make a csv output of raw distribution data using logs
+	
 
 ##########################################
 # function: calculate the distribution of the last octet of inbound and outbound traffic
@@ -130,6 +144,8 @@ def stdev(numbers):
 # parameter: numbers the list of numbers
 ##########################################
 def avg(numbers):
+	if (len(numbers) == 0):
+		return 0
 	return sum(numbers) / float(len(numbers))
 
 if __name__ == "__main__":
