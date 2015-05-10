@@ -80,7 +80,27 @@ def main():
 		for key in outputs:
 			f.write('%s\t%s\n' % (key, str(outputs[key]['stdev'])))
 	#make a csv output of raw distribution data using logs
-	
+	with open('distribution.output','w') as f:
+		for index, key in enumerate(logs):
+			f.write(key)
+			if (index < len(logs)):
+				f.write('\t')
+			else:
+				f.write('\n')
+		break_flag = False
+		line_number = 0
+		while (not break_flag):
+			break_flag = True #default value
+			for index, key in enumerate(logs):
+				if (line_number < len(logs[key])): #if there's still a list as long as line_number
+					f.write(logs[key][line_number])
+					break_flag = False #prevent break
+				if (index < len(logs)):
+					f.write('\t')
+				else:
+					f.write('\n')
+			line_number += 1
+		
 
 ##########################################
 # function: calculate the distribution of the last octet of inbound and outbound traffic
