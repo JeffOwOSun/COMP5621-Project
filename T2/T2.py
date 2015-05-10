@@ -76,12 +76,9 @@ def main():
 	output_string = json.dumps(outputs, sort_keys=True) #json that contains only name, stdev and classification
 	with open('output.json','w') as f:
 		f.write(output_string)
-	###debug use only###
-	pprint.pprint(outputs)
-	###\debug use only###
 	with open('stdev.output','w') as f: #csv for stdev
-		for key,value in outputs:
-			f.write('%s\t%s\n' % (key, str(value['stdev'])))
+		for key in outputs:
+			f.write('%s\t%s\n' % (key, str(outputs[key]['stdev'])))
 	#make a csv output of raw distribution data using logs
 	
 
