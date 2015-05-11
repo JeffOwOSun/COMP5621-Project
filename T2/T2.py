@@ -71,11 +71,8 @@ def main():
 		log_result['dest_ip_last_octet'] = dest_ip_last_octet
 		log_result['stdev'] = my_stdev
 		log_result['file_type'] = file_type
-		output_result['stdev'] = my_stdev
-		output_result['file_type'] = file_type
 				
 		logs[trace_file] = log_result
-		outputs[trace_file.split('/')[-1]] = output_result
 		
 	###for debug use only###
 	###pprint.pprint(logs)
@@ -84,30 +81,12 @@ def main():
 	log_string = json.dumps(logs, sort_keys=True) #everything
 	with open('log.json','w') as f:
 		f.write(log_string)
-	output_string = json.dumps(outputs, sort_keys=True) #json that contains only name, stdev and classification
-	with open('output.json','w') as f:
-		f.write(output_string)
-	with open('stdev.output','w') as f: #csv for stdev
-		for key in outputs:
-			f.write('%s\t%s\n' % (key, str(outputs[key]['stdev'])))
-	#make a csv output of raw distribution data using logs
-	with open('distribution.output','w') as f:
-		for index, key in enumerate(logs):
-			f.write('{file_name} src\t{file_name} dest'.format(idx=index,file_name = key.split('/')[-1]))
-			if (index + 1 < len(logs)):
-				f.write('\t')
-			else:
-				f.write('\n')
-		break_flag = False
-		for line_number in range(256):
-			for index, key in enumerate(logs):
-				f.write(str(logs[key]['src_ip_last_octet'][line_number]))
-				f.write('\t')
-				f.write(str(logs[key]['dest_ip_last_octet'][line_number]))
-				if (index + 1 < len(logs)):
-					f.write('\t')
-				else:
-					f.write('\n')
+		
+	#the output of the program
+	with open('output','w') as f:
+		f.write('file\tstdev\tclassification\n')
+		for key in sorted(logs):
+			f.write('%s\t%s\t%s\n' % (key.split('/')[-1], str(logs[key]['stdev']), str(logs[key]['file_type'])))
 		
 
 ##########################################
