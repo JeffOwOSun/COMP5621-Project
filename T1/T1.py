@@ -4,12 +4,13 @@ import pprint
 
 # the default path of trace file
 trace_file_dir = '../tracefiles/known'
-trace_files = ['gi-1.trace','gi-2.trace','dc-1.trace','dc-2.trace','dc-3.trace','dc-4.trace']
+trace_files = ['gi-1.trace','gi-2.trace']
+
+output_list = []
 
 for trace_file in trace_files:
 	# the array to do the statistics
 	src_ip_last_octet = [0] * 256
-	dest_ip_last_octet = [0] * 256
 	
 	with open(os.path.join(trace_file_dir, trace_file),'rU') as f: # U for universal newline
 		next(f)
@@ -17,11 +18,14 @@ for trace_file in trace_files:
 		for start, src_ip, src_port, dest_ip, dest_port, octets in my_reader:
 			last_octet = int(src_ip.strip().split('.')[3])
 			src_ip_last_octet[last_octet] += 1
-			last_octet = int(dest_ip.strip().split('.')[3])
-			dest_ip_last_octet[last_octet] += 1
 	
-	#pprint.pprint(src_ip_last_octet)
-	with open(os.path.join(trace_file_dir, '.'.join((trace_file,"output"))), 'w') as f:
-		#f.write("%s\n%s\n" % ('\t'.join(str(x) for x in src_ip_last_octet), '\t'.join(str(x) for x in dest_ip_last_octet)))
-		for i in range(0, 255):
-			f.write("%s\n" % '\t'.join((str(i), str(src_ip_last_octet[i]), str(dest_ip_last_octet[i])))) #extra bracket inside join to make a tuple					
+	output_list.append(src_ip_last_octet)
+	summ=float(sum(src_ip_last_octet))
+	output_list.append([x/summ for x in src_ip_last_octet])
+
+output_list = [tuple([str(x[i]) for x in output_list]) for i in range(256)]
+#pprint.pprint(src_ip_last_octet)
+with open('output', 'w') as f:
+	f.write('last_octet\tgi-1_src\tgi-1_src_percent\tgi-2_src\tgi-2_src_percent\n')
+	for i in range(256):
+		f.write("%d\t%s\n" % (i, '\t'.join(output_list[i])))
